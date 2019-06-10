@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!--
+<meta name="viewport" content="width=device-width, initial-scale=1">
+-->
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+  <style>
+    .modal-body{
+      height: 107px;
+    }
+    .error-msg
+    {
+        display:none;
+    }
+  </style>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="css/bootstrap-sortable-1.8.0.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">
+            <img alt="Brand" style = "transition: height .3s,padding .3s,margin-top .3s;height: 30px;"  src="css/images/dark_logo.png">
+          </a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+            <li><p class="navbar-text" style="margin-right: 10px;">Signed in as <a href="#" class="navbar-link signed-in-as">Mark Otto</a></p></li>
+            <li><a href="/logout" id="logout-btn">Logout</a></li>
+         </ul>
+      </div>
+    </nav>
+    <h1>
+      Leave Requests from Employees
+    </h1>
+
+    <br>
+    <br>
+    <div class = "loading" ><center><img src = 'css/images/loadingGif.gif'></center></div>
+    <div class = "action-btns" style = "display:none;" >
+        <center>
+            <button type="button" class="btn btn-success approve">Approve</button>
+            <!-- Indicates a dangerous or potentially negative action -->
+            <button type="button" class="btn btn-danger reject">Reject</button>
+        </center>
+    </div>
+    <br>
+    <br>
+    <table class = 'table sortable table-condensed ' border='1' style="width:100%;font-size:12px;display:none;">
+      <thead>
+        <tr>
+          <th width="20" data-defaultsort="desc" >
+              Employee ID
+          </th>
+          <th width="50" >
+            Name
+          </th>
+          <th width="50" >
+              Email Id
+          </th>
+          <th width="20" >
+            No_of_days
+          </th>
+          <th width="50" >
+            from (yyyy-mm-dd)
+          </th>
+          <th width="50" >
+            to (yyyy-mm-dd)
+          </th>
+          <th width="100" >
+            reason
+          </th>
+          <th width="100"  >
+            Status
+          </th>
+          <th width="200">
+            Respond
+          </th>
+        </tr>
+      </thead>
+      <tbody class="leave">
+      </tbody>
+    </table>
+
+
+    <div class="modal fade  warning-modal" style = "display:none;">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Alert</h4>
+          </div>
+          <div class="modal-body">
+            <p class = "warning-msg"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+  <script src="js/jquery-1.11.1.min.js"></script>
+  <script src="js/bootstrap.js"></script>
+  <script src="js/moment.js"></script>
+
+  <script src="js/bootstrap-sortable-1.8.0.js">
+  </script>
+
+  <script>
+
+
+
+
+var managerPg=function()
+{
+
+     var Parent_var=this;
+
+     $.bootstrapSortable(true);
+
+     this.test = function(arg){
+         alert("called "+arg);
+     },
+
+     this.getAllLeavereqs = function () {
+         try{
+            $.ajax('http://localhost:3000/leav/Applications',{
+                type: "GET",
+                statusCode: {
+                    404: function (response) {
+                        console.log('404');
+                        alert("Server error");
+                    },
+                    401: function(response){
+                        console.log("401");
+                        alert("Error loading");
+                    }
+                },
+                success: function (response) {
+                    console.log('success ' + response);
+                    $('.loading').hide();
+                    $('.table').show();
+                    $('.signed-in-as').text(response.loginas);
+                    var results = response;
+                    $.each( results['json'], function( key, value ) {
+                      Parent_var.addRow(results['json'][key]['id'],results['json'][key]['EmployeeId'],results['json'][key]['Name'],results['json'][key]['Email'],results['json'][key]['No_of_days'],results['json'][key]['from'],results['json'][key]['to'],results['json'][key]['reason'],results['json'][key]['status']);
+                    });
+                    $('.action-btns').show();
+                },
+                fail : function (response) {
+                    console.log("fail");
+                }
+           });
+       }catch(exp){console.log("Error "+exp);}
+
+     },
+     this.changeStatus=function(status,eid,frm,rowid){
+       try{
+           console.log(status,eid,frm);
+          $.ajax("http://localhost:3000/change/leaveStatus2",
+            {
+                 type: "POST",
+                 data: {'eid':eid,'fromdt':frm,'setStatus':status,'rowid':rowid},
+                 statusCode: {
+                     404: function (response) {
+                         console.log('404', resp);
+
+                         Parent_var.showWarning(" Server Error");
+                     },
+                     401: function(response){
+                        console.log("401");
+                        Parent_var.showWarning("Error");
+                     }
+                 },
+                success: function (response) {
+                     var resp = response.msg;
+                     if(resp == 'success'){
+                        Parent_var.showWarning("Status has been changed");
+                        console.log(response.result +" success ");
+                     }
+                     else
+                        Parent_var.showWarning("Status could not changed");
+                 },
+                fail : function (response) {
+                    //warning.showWarning("Request failed");
+                    Parent_var.showWarning("Request failed ");
+                }
+             });
+     }catch(exp){console.log("Error "+exp);}
+     },
+
+    this.changeStatus2=function(status,eid,rowid){
+      try{
+          console.log(status,eid,rowid.length);
+         $.ajax("http://localhost:3000/change/leaveStatus3",
+           {
+                type: "POST",
+                data: {'eid':eid,'setStatus':status,'rowid':rowid},
+                statusCode: {
+                    404: function (response) {
+                        console.log('404', resp);
+
+                        Parent_var.showWarning(" Server Error");
+                    },
+                    401: function(response){
+                       console.log("401");
+                       Parent_var.showWarning("Error");
+                    }
+                },
+               success: function (response) {
+                    var resp = response.msg;
+                    if(resp == 'success'){
+                       Parent_var.showWarning("Status has been changed");
+                       console.log(response.result +" success ");
+                       $('.action-btns').hide();
+                       $('.table').hide();
+                       $('.leave').empty();
+                       $('.loading').show();
+                       Parent_var.getAllLeavereqs();
+                    }
+                    else
+                       Parent_var.showWarning("Status could not changed");
+                },
+               fail : function (response) {
+                   //warning.showWarning("Request failed");
+                   Parent_var.showWarning("Request failed ");
+               }
+            });
+    }catch(exp){console.log("Error "+exp);}
+    },
+     this.showWarning = function(errMsg){
+        //$('.warning-modal').show();
+        $('.warning-modal').modal('show');
+        $('.warning-msg').text(errMsg);
+        setTimeout(function(){
+            $('.warning-modal').modal('hide');
+            $('.warning-msg').text("");
+        }, 3000);
+     },
+     this.addRow = function(rid,EmployeeID,Name,EmailId,No_of_days,from,to,reason,Status){
+           from = Parent_var.dateFormat(from);
+           to = Parent_var.dateFormat(to);
+           var randNumbr = Parent_var.randNumbr();
+         var str1 = '<tr id="'+rid+'"><td class = "empid" id = "emplyId-'+rid+'" data-value="' +EmployeeID+ '">' + EmployeeID +  '</td>' +
+             '<td id = "name-'+rid+'" >' + Name + '</td>' +
+             '<td id = "email-'+rid+'">' + EmailId + '</td>' +
+             '<td id = "days-'+rid+'"  data-value="' +No_of_days+ '">' + No_of_days + '</td>' +
+             '<td id = "from-'+rid+'">' + from + '</td>' +
+             '<td id = "to-'+rid+'">' + to + '</td>' +
+             '<td id = "rsn-'+rid+'">' + reason + '</td>' +
+             '<td id = "sts-'+rid+'">' + Status + '</td>' +
+
+             '<td id = "action-'+rid+'" ><input class = "check-me" style = "cursor:pointer" type="checkbox" id = "check-'+rid+'" > Select </td>' +
+             '</tr>';
+         $('.leave').append(str1);
+
+     },
+     this.randNumbr = function(){
+        return parseInt(Math.random() * 10000, 10);
+    },
+    this.dateFormat = function(dt){
+        dt = dt.replace('T','/');
+        dt = dt.split('/');
+        dt = dt[0];
+        console.log(dt);
+        dt  = dt.split('-');
+        dt[2] = Number(dt[2])+1;
+        dt = dt[0]+'-'+dt[1]+'-'+dt[2];
+
+        return dt;
+    },
+    this.selectedChkbx = function(){
+        var sel = [];
+        $('.check-me').each(function(){
+            var id = $(this).attr('id');
+            console.log($(this).attr('id'));
+            if($('#' + id).is(":checked")){
+                sel.push(id);
+                console.log(id +"  is selected");
+            }
+
+        });
+        return sel;
+    }
+
+}
+
+var ObjVar=new managerPg();
+ObjVar.getAllLeavereqs();
+
+$('#approve').click(function(){
+    var id = $(this).parent.attr('id').split('-');
+    id = $('#emplyId-'+id[1]).attr('data-value');
+    var frm = $('#from-'+id[1]).text();
+    ObjVar.approveLeave("Approved",id,frm);
+});
+
+$('.approve').click(function(){
+    var selected = ObjVar.selectedChkbx();
+    console.log(selected);
+    var eids = [];
+    var rids = [];
+    if(selected.length == 0){
+        ObjVar.showWarning('please select employees to whom you want to approve leave');
+    }
+    else{
+        selected.forEach(function(entry) {
+            var rowId = entry.split('-');
+            rids.push(rowId[1]);
+            var Eid = $('#emplyId-'+rowId[1]).attr('data-value');
+            eids.push(Eid);
+        });
+        ObjVar.changeStatus2('Approved',eids,rids);
+    }
+});
+
+
+$('.reject').click(function(){
+    var selected = ObjVar.selectedChkbx();
+    console.log(selected);
+    var eids = [];
+    var rids = [];
+    if(selected.length == 0){
+        ObjVar.showWarning('please select employees to whom you want to reject leave');
+    }
+    else{
+        selected.forEach(function(entry) {
+            var rowId = entry.split('-');
+            rids.push(rowId[1]);
+            var Eid = $('#emplyId-'+rowId[1]).attr('data-value');
+            eids.push(Eid);
+        });
+        ObjVar.changeStatus2('Rejected',eids,rids);
+    }
+});
+
+</script>
+</body>
+</html>

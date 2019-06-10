@@ -1,0 +1,65 @@
+/*css file which has styles for new bootstrap navbar header*/
+
+.navbar
+{
+    border:none !important;
+}
+.navbar-collapse
+{
+    border-top: none !important;
+}
+
+.navbar-toggle
+{
+    border: none !important;
+}
+.navbar-inverse
+{
+    background-color: #02caa5 !important;
+    border-color: none !important;
+    border-radius: none !important;
+    background-image: none !important;
+}
+.navbar-brand
+{
+    color:white !important;
+}
+
+.header-feedback-img
+{
+    height: 36px !important;
+}
+
+.goodbox-brand
+{
+    font-size:24px;
+    padding:16px !important;
+}
+
+.navbar-header
+{
+    padding-top:2px;
+    padding-left: 10px;
+}
+
+
+.navbar-nav>li>a
+{
+    color: #fff !important;
+}
+
+.navbar-nav>li :hover {
+    text-decoration: none;
+    background: #eee !important;
+}
+
+.navbar-nav>li>a:hover
+{
+    color: black !important;
+    text-shadow:none !important;
+}
+
+.navbar-brand.feedbk-icon
+{
+    padding: 8px 15px !important;
+}

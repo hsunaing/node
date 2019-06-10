@@ -1,0 +1,57 @@
+background-image: linear-gradient(90deg, #F5515F 0%, #9F041B 100%);
+
+D0021B
+
+font-family: .AppleSystemUIFont;
+font-size: 14px;
+color: #444444;
+
+<form id="loginform" class="login100-form validate-form">
+                    <span class="login100-form-title">
+                        &nbsp
+                    </span>
+
+                    <div class="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
+                        <input id="login-username" class="input100" type="text" name="username" placeholder="Email">
+                        <span class="focus-input100"></span>
+                        <span class="symbol-input100">
+                            <i class="fa fa-envelope" aria-hidden="true"></i>
+                        </span>
+                    </div>
+
+                    <div class="wrap-input100 validate-input" data-validate="Password is required">
+                        <input id="login-password" class="input100" type="password" name="password" placeholder="Password">
+                        <span class="focus-input100"></span>
+                        <span class="symbol-input100">
+                            <i class="fa fa-lock" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <div class="wrap-input100 validate-input" data-validate="Password is required">
+                            <div style="
+                            float: right;
+                        "> <div id="toggles">
+                                  <input type="checkbox" name="checkbox1" id="checkbox1" class="ios-toggle" checked="">
+                                  <label for="checkbox1" class="checkbox-label" data-off="" data-on=""></label>
+                            </div></div><div>Remember me</div>
+                                            </div>
+                    <div class="container-login100-form-btn controls">
+                        <button id="btn-login" href="#" class="login100-form-btn">
+                            Login
+                        </button>
+                    </div>
+
+                    <div class="text-center p-t-12">
+                        <span class="txt1">
+                                &nbsp
+                        </span>
+                        <a class="txt2" href="#">
+                                &nbsp
+                        </a>
+                    </div>
+
+                    <div class="text-center p-t-136">
+                        <a class="txt2" href="#">
+                                &nbsp
+                        </a>
+                    </div>
+                </form>
