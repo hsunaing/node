@@ -3,10 +3,10 @@
 //   };
 // const FRUIT = "kiwi";
 // const VEGETABLE = "carrot";
-const serverURLdata = 'http://localhost:3000'
+const serverURLdata = 'http://leave-nodejs-echo.apps.us-east-2.online-starter.openshift.com'
 // var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
 //     ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
 //     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
 //     mongoURLLabel = "", hellostring = process.env.SOMEFAX;
-var ip = process.env.IP
-console.log('testing js: '+ip)
+// var ip = process.env.IP
+// console.log('testing js: '+ip)
