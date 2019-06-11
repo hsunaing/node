@@ -13,7 +13,7 @@ var path = require('path');
 var connection = mysql.createConnection({
         host     : 'hsunaing.heliohost.org:3306',
         user     : 'hsunaing',
-        password : '1@2.comsS'
+        password : ''
     });
     
 var graphConfig = {
