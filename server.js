@@ -6,6 +6,7 @@ var app = express();
 var mysql = require('mysql');
 var cors = require('cors');
 var path = require('path');
+var morgan  = require('morgan');
 // Application initialization
 
 var connection = mysql.createConnection({
@@ -27,6 +28,12 @@ app.use('/fonts',express.static(path.join(__dirname, '/views/fonts')));
 app.use('/vendor',express.static(path.join(__dirname, '/views/vendor')));
 app.use('/images',express.static(path.join(__dirname, '/views/images')));
 app.engine('html', require('ejs').renderFile);
+app.use(morgan('combined'))
+
+var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+    mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
+    mongoURLLabel = "";
 
 app.use(session({
     secret: 'ssshhhhh',
@@ -875,8 +882,12 @@ function newUser() {
 //     })
 // }
 
-app.listen(3000,function(){
+// app.listen(3000,function(){
 
-    console.log("App Started on PORT 3000 open http://localhost:3000/ in browser");
+//     console.log("App Started on PORT 3000 open http://localhost:3000/ in browser");
 
-});
+// });
+app.listen(port, ip);
+console.log('Server running on http://%s:%s', ip, port);
+
+module.exports = app ;
