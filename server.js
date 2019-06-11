@@ -94,7 +94,7 @@ app.get('/leav/Applications',function(req,res){
     console.log(sess.empId, sess.managr, managerIndicator +" for this manager");
     //check if he is logged in and he is not manager
     if(sess.email && sess.managr == 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
             connection.query('SELECT * FROM leav_requests as A JOIN employee as B on A.Emp_ID=B.Emp_ID WHERE Mngr_emp_id="'+sess.empId+'"',
                 function(err, rows, fields) {
@@ -148,7 +148,7 @@ app.post('/change/leaveStatus',function(req,res){
     console.log(sess.empId, sess.managr, managerIndicator, statustoBeset, fromDate, emplytobeApprove   +" for this manager");
     //check if he is logged in and he is not manager
     if(sess.email && sess.managr == 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
                 connection.query('update  leav_requests set status="'+statustoBeset+'"  WHERE Emp_ID="'+emplytobeApprove+'" AND from_date="STR_TO_DATE('+fromDate+')"',
                 function(err, result){
@@ -187,7 +187,7 @@ app.post('/change/leaveStatus2',function(req,res){
 
     //check if he is logged in and he is not manager
     if(sess.email && sess.managr == 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
                 connection.query('update  leav_requests set status="'+statustoBeset+'"  WHERE Emp_ID="'+emplytobeApprove+'" AND id="'+req.body.rowid+'"',
                 function(err, result){
@@ -233,7 +233,7 @@ app.post('/change/leaveStatus3',function(req,res){
     //console.log(sess.empId, sess.managr, managerIndicator, statustoBeset, fromDate, emplytobeApprove   +" for this manager");
     //check if he is logged in and he is not manager
     if(sess.email && sess.managr == 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
             var temp = 1;
                for(var i = 0;i<req.body.eid.length;i++){
@@ -295,7 +295,7 @@ app.post('/requestfor/Leave',function(req,res){
     var from_dt,to_dt,no_of_days,reason;
     from_dt = req.body.frm ,to_dt = req.body.to ,no_of_days = req.body.days,reason=req.body.rsn;
     if(sess.email && sess.managr != 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
         connection.query('insert into leav_requests (Emp_ID,from_date,to_date,reason,no_of_days,status) value("'+sess.empId+'","'+from_dt+'","'+to_dt+'","'+reason+'","'+no_of_days+'","Pending")',
             function(error, results) {
@@ -330,7 +330,7 @@ app.post('/cancel/Leave',function(req,res){
     var emplyId,from_dt;
     emplyId = req.body.emplyid,from_dt = req.body.frm;
     if(sess.email && sess.managr != 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
             connection.query('DELETE FROM leav_requests  WHERE Emp_ID="'+sess.empId+'" AND id="'+req.body.rid+'"', function(err, rows, fields) {
                 if (err) {
@@ -382,7 +382,7 @@ app.get('/my/leaves',function(req,res){
     console.log(sess.empId, sess.managr, managerIndicator +" for this manager");
     //check if he is logged in and he is not manager
     if(sess.email && sess.managr != 'Y'){
-        connection.query('USE newschema', function (err) {
+        connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
             connection.query('SELECT * FROM leav_requests WHERE Emp_ID = "'+sess.empId+'"',
                 function(err, rows, fields) {
@@ -454,7 +454,7 @@ app.post('/login',function(req,res){
     //console.log(req.body.email,req.body.password);
 
     //query and check whether he is an Manager
-    connection.query('USE newschema', function (err) {
+    connection.query('USE hsunaing_mysqldb', function (err) {
         if (err) throw err;
         connection.query('SELECT * FROM employee WHERE Email = "'+req.body.email+'"',
             function(err, rows, fields) {
@@ -625,7 +625,7 @@ app.post('/adlogin',function(req,res){
                         // empMngrId = row.Mngr_emp_id;
 function queryInternal() {
             //query and check whether he is an Manager
-            connection.query('USE newschema', function (err) {
+            connection.query('USE hsunaing_mysqldb', function (err) {
                 if (err) throw err;
                 connection.query('SELECT * FROM employee WHERE Email = "'+empEmail+'"',
                     function(err, rows, fields) {
@@ -771,7 +771,7 @@ function connectToMS() {
     })
 }
 function newUser() {
-    connection.query('USE newschema', function (err) {
+    connection.query('USE hsunaing_mysqldb', function (err) {
         if (err) throw err;
     connection.query('insert into leav_requests (Emp_ID,from_date,to_date,reason,no_of_days,status) value("'+sess.empId+'","'+from_dt+'","'+to_dt+'","'+reason+'","'+no_of_days+'","Pending")',
         function(error, results) {
