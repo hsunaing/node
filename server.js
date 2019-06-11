@@ -6,9 +6,9 @@ var app = express();
 var mysql = require('mysql');
 var cors = require('cors');
 var path = require('path');
-var morgan  = require('morgan');
+// var morgan  = require('morgan');
 // Application initialization
-Object.assign=require('object-assign')
+// Object.assign=require('object-assign')
 
 var connection = mysql.createConnection({
         host     : 'localhost',
