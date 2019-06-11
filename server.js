@@ -35,7 +35,7 @@ app.use('/vendor',express.static(path.join(__dirname, '/views/vendor')));
 app.use('/images',express.static(path.join(__dirname, '/views/images')));
 
 app.engine('html', require('ejs').renderFile);
-app.use(morgan('combined'))
+//app.use(morgan('combined'))
 
 
 app.use(session({
