@@ -1,20 +1,6 @@
 {
   "name": "leaveHsu",
   "version": "0.0.1",
-  "main": "server.js",
-  "dependencies": {
-    "axios": "^0.18.0",
-    "body-parser": "^1.7.0",
-    "cors": "^2.8.5",
-    "ejs": "2.5.5 ",
-    "express": "^4.8.7",
-    "express-session": "^1.7.6",
-    "mysql": "^2.17.1"
-  }
-}
-{
-  "name": "leaveHsu",
-  "version": "0.0.1",
   "description": "Node.js for leave",
   "main": "server.js",
   "dependencies": {
