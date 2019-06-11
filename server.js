@@ -8,6 +8,7 @@ var cors = require('cors');
 var path = require('path');
 var morgan  = require('morgan');
 // Application initialization
+Object.assign=require('object-assign')
 
 var connection = mysql.createConnection({
         host     : 'localhost',
@@ -21,19 +22,21 @@ var graphConfig = {
 
 var sess;
 var globEmailIdvar,managerIndicator;
+var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+    mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
+    mongoURLLabel = "";
+
 app.set('views', __dirname + '/views');
 app.use('/js',express.static(path.join(__dirname, '/views/js')));
 app.use('/css',express.static(path.join(__dirname, '/views/css')));
 app.use('/fonts',express.static(path.join(__dirname, '/views/fonts')));
 app.use('/vendor',express.static(path.join(__dirname, '/views/vendor')));
 app.use('/images',express.static(path.join(__dirname, '/views/images')));
+
 app.engine('html', require('ejs').renderFile);
 app.use(morgan('combined'))
 
-var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
-    mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
-    mongoURLLabel = "";
 
 app.use(session({
     secret: 'ssshhhhh',
