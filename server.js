@@ -11,9 +11,9 @@ var path = require('path');
 // Object.assign=require('object-assign')
 
 var connection = mysql.createConnection({
-        host     : 'localhost',
-        user     : 'root',
-        password : 'root'
+        host     : 'hsunaing.heliohost.org:3306',
+        user     : 'hsunaing',
+        password : '1@2.comsS'
     });
     
 var graphConfig = {
@@ -25,7 +25,7 @@ var globEmailIdvar,managerIndicator;
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
-    mongoURLLabel = "";
+    mongoURLLabel = "", hellostring = process.env.somestring;
 
 app.set('views', __dirname + '/views');
 app.use('/js',express.static(path.join(__dirname, '/views/js')));
@@ -892,5 +892,5 @@ function newUser() {
 // });
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
-
+console.log('hi there' + hellostring);
 module.exports = app ;
