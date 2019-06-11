@@ -9,11 +9,14 @@ var path = require('path');
 // var morgan  = require('morgan');
 // Application initialization
 // Object.assign=require('object-assign')
-
+var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+    mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
+    mongoURLLabel = "", hellostring = process.env.SOMEFAX;
 var connection = mysql.createConnection({
         host     : 'hsunaing.heliohost.org:3306',
         user     : 'hsunaing',
-        password : ''
+        password : process.env.DBPW
     });
     
 var graphConfig = {
@@ -22,10 +25,7 @@ var graphConfig = {
 
 var sess;
 var globEmailIdvar,managerIndicator;
-var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
-    mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
-    mongoURLLabel = "", hellostring = process.env.SOMEFAX;
+
 
 app.set('views', __dirname + '/views');
 app.use('/js',express.static(path.join(__dirname, '/views/js')));
