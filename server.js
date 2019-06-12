@@ -14,7 +14,7 @@ var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
     mongoURLLabel = "", hellostring = process.env.SOMEFAX;
 var connection = mysql.createConnection({
-        host     : 'hsunaing.heliohost.org:3306',
+        host     : 'hsunaing.heliohost.org',
         user     : 'hsunaing',
         password : process.env.DBPW
     });
