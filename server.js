@@ -4,7 +4,7 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 var app = express();
 var mysql = require('mysql');
-var cors = require('cors');
+// var cors = require('cors');
 var path = require('path');
 // var morgan  = require('morgan');
 // Application initialization
@@ -46,7 +46,7 @@ app.use(session({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cors());
+// app.use(cors());
 
 app.get('/',function(req,res){
     
