@@ -451,7 +451,7 @@ app.post('/login',function(req,res){
 
     globEmailIdvar = req.body.email;
     var pswd = req.body.password;
-    //console.log(req.body.email,req.body.password);
+    console.log(req.body.email,req.body.password);
 
     //query and check whether he is an Manager
     connection.query('USE hsunaing_mysqldb', function (err) {
