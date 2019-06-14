@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/jquery-ui.min.css">
+    <link rel="stylesheet" href="css/jquery-ui.theme.min.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <!-- <script src="cordova.js"></script> -->
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery-1.11.1.min.js"></script>
+    <script src="cordova.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.js"></script>
+    <script src="js/moment.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/index.js"></script>
+    <script src="js/login.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.4/bluebird.min.js"></script>
+    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.0/js/msal.js"></script>
+    <style>
+        #datepicker1,
+        #datepicker2 {
+            cursor: pointer;
+            width: 260px !important;
+        }
+    </style>
+</head>
+
+<body onload="init();">
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">
+                    <img alt="Brand" style="transition: height .3s,padding .3s,margin-top .3s;height: 30px;"
+                        src="css/images/dark_logo.png">
+                </a>
+            </div>
+            <ul class="nav navbar-nav navbar-right">
+                <li style="display:none" class="name">
+                    <p class="navbar-text" style="margin-right: 10px;">Signed in as <a href="#"
+                            class="navbar-link signed-in-as"></a></p>
+                </li>
+                <li><button href="#" type="button" onclick="signOut()" id="logout-btn"
+                        class="btn btn-danger">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="loading" style="display:none;">
+        <center><img src='css/images/loadingGif.gif'></center>
+    </div>
+    <div class="action-btns" style="display:none;">
+        <center>
+            <button type="button" class="btn btn-success approve">Approve</button>
+            <!-- Indicates a dangerous or potentially negative action -->
+            <button type="button" class="btn btn-danger reject">Reject</button>
+        </center>
+    </div>
+    <br>
+    <br>
+
+
+    <div class="container">
+        <table class='table sortable table-condensed ' border='1' style="width:100%;font-size:12px;display:none;">
+            <thead>
+                <tr>
+                    <th width="20" data-defaultsort="desc">
+                        Employee ID
+                    </th>
+
+
+                    <th width="20">
+                        No_of_days
+                    </th>
+                    <th width="50">
+                        from (yyyy-mm-dd)
+                    </th>
+                    <th width="50">
+                        to (yyyy-mm-dd)
+                    </th>
+                    <th width="100">
+                        reason
+                    </th>
+                    <th width="100">
+                        Status
+                    </th>
+
+                </tr>
+            </thead>
+            <tbody class="leave">
+            </tbody>
+        </table>
+        <h1>Select Dates</h1>
+
+        <div class='col-md-6 from'>
+            <div class="form-group">
+                <p>From Date: *<input type="text" readonly id="datepicker1"></p>
+            </div>
+        </div>
+        <div class='col-md-6 to'>
+            <div class="form-group">
+                <p>To Date: *<input type="text" readonly id="datepicker2"></p>
+            </div>
+        </div>
+
+        <div class="col-md-12 to">
+            <div class="form-group">
+                <p style="">Reason (optional) </p>
+                <textarea id="reason"></textarea>
+            </div>
+        </div>
+
+        <div class="action" style="">
+            <center>
+                <button type="button" class="btn btn-success apply">Apply</button>
+
+            </center>
+        </div>
+
+        <div class="modal fade  warning-modal" style="display:none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Alert</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="warning-msg"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+        <script type="text/javascript">
+            var avlableDays = [];
+            var tempArr = [];
+            //ref http://publicholidays.in/
+            var disabledDays = ['2015-03-05', '2015-03-28', '2015-04-03', '2015-05-01', '2015-07-18', '2015-08-15', '2015-10-02', '2015-11-11', '2015-12-25'];
+
+            /* utility functions */
+            function nationalDays(date) {
+                var m = date.getMonth(), d = date.getDate(), y = date.getFullYear();
+                //console.log('Checking (raw): ' + m + '-' + d + '-' + y);
+                for (i = 0; i < disabledDays.length; i++) {
+                    if ($.inArray((m + 1) + '-' + d + '-' + y, disabledDays) != -1 || new Date() > date) {
+                        //console.log('bad:  ' + (m+1) + '-' + d + '-' + y + ' / ' + disabledDays[i]);
+                        return [false];
+                    }
+                }
+                //console.log('good:  ' + (m+1) + '-' + d + '-' + y);
+                return [true];
+            }
+
+            function noWeekendsOrHolidays(date) {
+                var noWeekend = jQuery.datepicker.noWeekends(date);
+                return noWeekend[0] ? nationalDays(date) : noWeekend;
+            }
+
+            /* create datepicker */
+            jQuery(document).ready(function () {
+                datePickerInit();
+                function datePickerInit() {
+                    jQuery('#datepicker1, #datepicker2').datepicker({
+                        //minDate: new Date(2015, 0, 1),
+                        //maxDate: new Date(2015, 5, 31),
+                        dateFormat: 'yy-mm-dd',
+                        constrainInput: true,
+                        beforeShowDay: noWeekendsOrHolidays,
+                        showAnim: "slide"
+                    });
+                }
+
+                $('#datepicker1').datepicker('option', {
+                    onSelect: function (selectedDate) {
+
+                        $('#datepicker2').datepicker("option", { minDate: null, maxDate: null });
+                        console.log(selectedDate);
+                        avlableDays = [];
+                        tempArr = [];
+                        availDateChange1();
+                        var start = avlableDays[0];
+                        console.log(avlableDays[0] + "start");
+                        start = start.split('-');
+                        start[1] = start[1] - 1;
+                        var end = availDateChange1().split(',');
+                        end[1] = end[1] - 1;
+                        console.log();
+                        $('#datepicker2').datepicker('option', { minDate: new Date(start[0], start[1], start[2]), maxDate: new Date(end[0], end[1], end[2]) });
+                        console.log(start[0], start[1], start[2] + " and " + end);
+                    }
+                });
+            });
+
+            function availDateChange1() {
+                var strDate = new Date($('#datepicker1').val());
+                var availDate = new Date(strDate);
+                var endDate = "", noOfDaysToAdd = 15, count = 0, holiday = 0;
+
+                console.log(disabledDays.length);
+                while (count < noOfDaysToAdd) {
+                    endDate = new Date(strDate.setDate(strDate.getDate() + 1));
+                    if (endDate.getDay() != 0 && endDate.getDay() != 6) {
+                        //disabledDays.length;
+                        disabledDays.forEach(function (item) {
+                            //console.log(item + "array");
+                            var thisDay = endDate.getMonth() + 1 + "-" + endDate.getDate() + "-" + endDate.getFullYear();
+                            if (item == thisDay) {
+                                alert(" Holiday " + thisDay);
+                                holiday += 1;
+                                count -= 1;
+                                //console.log(holiday);
+                            }
+                        })
+                        count++;
+                        var month = endDate.getMonth() + 1;
+                        var day = endDate.getDate();
+                        var year = endDate.getFullYear();
+                        endDate = year + '-' + month + '-' + day;
+                        avlableDays.push(year + '-' + month + '-' + day);
+                    }
+                }
+                console.log('this is Maximum Date (excluding holidays and weekends) ' + endDate);
+
+                avlableDays = uniqBy(avlableDays, JSON.stringify);
+                tempArr = avlableDays;
+                avlableDays.forEach(function (itm) {
+                    console.log("available " + itm);
+                });
+                console.log("available days are " + avlableDays.length);
+                return year + ',' + month + ',' + day;
+            }
+
+            var home = function () {
+                var Parent_var = this;
+
+                this.applyleave = function (frmdt, todt, reason, noOfdays) {
+                    try {
+                        $.ajax(serverURLdata + "/requestfor/Leave", {
+                            type: "POST",
+                            data: {
+                                'frm': frmdt,
+                                'to': todt,
+                                'rsn': reason,
+                                'days': noOfdays
+                            },
+                            statusCode: {
+                                404: function (response) {
+                                    console.log('404', resp);
+
+                                    Parent_var.showWarning(" Server Error 404");
+                                },
+                                401: function (response) {
+                                    console.log("401");
+                                    Parent_var.showWarning("Error");
+                                }
+                            },
+                            success: function (response) {
+                                var resp = response.msg;
+                                if (resp == 'success') {
+                                    console.log(response.result + " success ");
+                                    $('#datepicker1,#datepicker2').datepicker('setDate', null);
+                                    $('#reason').val("");
+                                    Parent_var.showWarning(response.result);
+                                } else {
+                                    console.log('else');
+                                    Parent_var.showWarning(response.result);
+                                }
+                            },
+                            fail: function (response) {
+                                console.log('fail');
+                                Parent_var.showWarning("Request failed ");
+                            }
+                        });
+                    } catch (exp) {
+                        console.log("Error " + exp);
+                    }
+                },
+                    this.myemail = function () {
+                        $.getJSON(serverURLdata + "/my/email", function (data) {
+                            if (data.msg == 'success') {
+                                $('.name').show();
+                                $('.signed-in-as').text(data.email);
+                            }
+                            else {
+                                console.log(" else no data");
+                            }
+
+                        });
+                    },
+                    //getting existing leave requests of this employee
+                    this.getMyLeavereqs = function () {
+                        try {
+                            $.ajax(serverURLdata + "/my/leaves", {
+                                type: "GET",
+                                statusCode: {
+                                    404: function (response) {
+                                        console.log('404');
+                                        alert("Server error");
+                                    },
+                                    401: function (response) {
+                                        console.log("401");
+                                        alert("Error loading");
+                                    }
+                                },
+                                success: function (response) {
+                                    console.log('success ' + response);
+
+                                    var results = response;
+                                    $.each(results['json'], function (key, value) {
+                                        //addRow(results['json'][key]['id'], results['json'][key]['EmployeeId'], results['json'][key]['No_of_days'], results['json'][key]['from'], results['json'][key]['to'], results['json'][key]['reason'], results['json'][key]['status']);
+
+                                    });
+                                    //$('.action-btns').show();
+                                },
+                                fail: function (response) {
+                                    console.log("fail");
+                                }
+                            });
+                        } catch (exp) {
+                            console.log("Error " + exp);
+                        }
+
+                    },
+
+                    this.cancelLeave = function (eid, frm) {
+                        try {
+
+                            $.ajax(serverURLdata + "/cancel/Leave", {
+                                type: "POST",
+                                data: {
+                                    'emplyid': eid,
+                                    'frm': frmdt
+                                },
+                                statusCode: {
+                                    404: function (response) {
+                                        console.log('404', resp);
+
+                                        //Parent_var.showWarning(" Server Error");
+                                    },
+                                    401: function (response) {
+                                        console.log("401");
+                                        //Parent_var.showWarning("Error");
+                                    }
+                                },
+                                success: function (response) {
+                                    var resp = response.msg;
+                                    if (resp == 'success') {
+
+                                        console.log(response.result + " success ");
+
+
+                                    } else {
+                                        console.log('else');
+                                    }
+                                },
+                                fail: function (response) {
+                                    console.log('fail');
+                                    //Parent_var.showWarning("Request failed ");
+                                }
+                            });
+                        } catch (exp) {
+                            console.log("Error " + exp);
+                        }
+                    },
+                    //for getting existing leaves of this employee and show him with option of cancel in a table html structure, for his reference
+                    this.addRow = function (rid, EmployeeID, No_of_days, from, to, reason, Status) {
+                        from = Parent_var.dateFormat(from);
+                        to = Parent_var.dateFormat(to);
+                        var randNumbr = Parent_var.randNumbr();
+                        var str1 = '<tr id="' + rid + '"><td class = "empid" id = "emplyId-' + rid + '" data-value="' + EmployeeID + '">' + EmployeeID + '</td>' +
+                            '<td id = "name-' + rid + '" >' + Name + '</td>' +
+                            '<td id = "days-' + rid + '"  data-value="' + No_of_days + '">' + No_of_days + '</td>' +
+                            '<td id = "from-' + rid + '">' + from + '</td>' +
+                            '<td id = "to-' + rid + '">' + to + '</td>' +
+                            '<td id = "rsn-' + rid + '">' + reason + '</td>' +
+                            '<td id = "sts-' + rid + '">' + Status + '</td>' +
+                            '<td id = "action-' + rid + '" ><input class = "check-me" style = "cursor:pointer" type="checkbox" id = "check-' + rid + '" > Select </td>' +
+                            '</tr>';
+                        $('.leave').append(str1);
+                    },
+                    this.showWarning = function (errMsg) {
+                        //$('.warning-modal').show();
+                        $('.warning-modal').modal('show');
+                        $('.warning-msg').text(errMsg);
+                        setTimeout(function () {
+                            $('.warning-modal').modal('hide');
+                            $('.warning-msg').text("");
+                        }, 7000);
+                    },
+                    this.dateFormat = function (dt) {
+                        dt = dt.replace('T', '/');
+                        dt = dt.split('/');
+                        dt = dt[0];
+                        console.log(dt);
+                        return dt;
+                    }
+            }
+
+
+            var objVar = new home();
+            objVar.myemail();
+            $('.apply').click(function () {
+                var from = $('#datepicker1').val();
+                var to = $('#datepicker2').val();
+                if (from.length == 0 && to.length == 0) {
+                    objVar.showWarning(" Please Select From Date and To Date from Date picker");
+                }
+                else if (from.length == 0)
+                    objVar.showWarning(" Please Select From Date");
+
+                else if (to.length == 0)
+                    objVar.showWarning(" Please Select To Date");
+
+                else {
+                    var positn;
+                    console.log(tempArr);
+                    for (var i = 0; i < tempArr.length; i++) {
+                        var tem = tempArr[i].split('-');
+                        if (tem[1] < 9 && tem[2] < 9) {
+                            tem[1] = '0' + tem[1];
+                            tem[2] = '0' + tem[2];
+                            tempArr[i] = tem;
+                        }
+                        else if (tem[1] < 9) {
+                            tem[1] = '0' + tem[1];
+                            tempArr[i] = tem;
+                        }
+                        else if (tem[2] < 9) {
+                            tem[2] = '0' + tem[2];
+                            tempArr[i] = tem;
+                        }
+                        if (to == tem[0] + '-' + tem[1] + '-' + tem[2]) {
+                            positn = i;
+                        }
+                    }
+                    //console.log(tempArr);
+                    //console.log(positn+1);
+                    var reasonLeav = $('#reason').val();
+                    objVar.applyleave(from, to, reasonLeav, positn + 1);
+                }
+
+            });
+
+            function uniqBy(a, key) {
+                var seen = {};
+                return a.filter(function (item) {
+                    var k = key(item);
+                    return seen.hasOwnProperty(k) ? false : (seen[k] = true);
+                })
+            }
+        </script>
+        <script>
+            var msalConfig = {
+                auth: {
+                    clientId: "f60b955e-ac33-42b3-ac74-de49a53f2888",
+                    authority: "https://login.microsoftonline.com/e38cf816-2b22-43a0-8681-971a6e37abda"
+                },
+                cache: {
+                    cacheLocation: "localStorage",
+                    storeAuthStateInCookie: true
+                }
+            };
+            var tmpR, tmpR2
+
+            var graphConfig = {
+                graphMeEndpoint: "https://graph.microsoft.com/v1.0/me"
+            };
+
+            // create a request object for login or token request calls
+            // In scenarios with incremental consent, the request object can be further customized
+            var requestObj = {
+                scopes: ["user.read"]
+            };
+
+            var myMSALObj = new Msal.UserAgentApplication(msalConfig);
+
+            // Register Callbacks for redirect flow
+            // myMSALObj.handleRedirectCallbacks(acquireTokenRedirectCallBack, acquireTokenErrorRedirectCallBack);
+            myMSALObj.handleRedirectCallback(authRedirectCallBack);
+
+            function signIn() {
+                myMSALObj.loginPopup(requestObj).then(function (loginResponse) {
+                    //Successful login
+                    showWelcomeMessage();
+                    //Call MS Graph using the token in the response
+                    acquireTokenPopupAndCallMSGraph();
+                }).catch(function (error) {
+                    //Please check the console for errors
+                    console.log(error);
+                });
+            }
+
+            // function signOut() {
+            //   myMSALObj.logout();
+            // }
+            function signOutIn() {
+
+
+                
+                // return new Promise(resolve => {
+                //     setTimeout(() => {  
+                //         myMSALObj.logout();
+                //     }, 2000);
+                // });
+                let tmp = localStorage.getItem("deviceOS");
+                if (tmp == 'droid') {
+                    msLogout();
+                } else {
+                    myMSALObj.logout();
+                }
+            }
+            async function signOut() {
+                //myMSALObj.logout();
+                // var logout = await signOutIn();
+
+                logoutWithMSAD();
+                // signOutIn().then(window.location.href = 'logout');
+            }
+            function acquireTokenPopupAndCallMSGraph() {
+                //Always start with acquireTokenSilent to obtain a token in the signed in user from cache
+                myMSALObj.acquireTokenSilent(requestObj).then(function (tokenResponse) {
+                    callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken, graphAPICallback);
+                    tmpR2 = tokenResponse.accessToken
+                }).catch(function (error) {
+                    console.log(error);
+                    // Upon acquireTokenSilent failure (due to consent or interaction or login required ONLY)
+                    // Call acquireTokenPopup(popup window) 
+                    if (requiresInteraction(error.errorCode)) {
+                        myMSALObj.acquireTokenPopup(requestObj).then(function (tokenResponse) {
+                            callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken, graphAPICallback);
+
+                        }).catch(function (error) {
+                            console.log(error);
+                        });
+                    }
+                });
+            }
+
+            function callMSGraph(theUrl, accessToken, callback) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200)
+                        callback(JSON.parse(this.responseText));
+                }
+                xmlHttp.open("GET", theUrl, true); // true for asynchronous
+                xmlHttp.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+                xmlHttp.send();
+            }
+
+            function graphAPICallback(data) {
+
+                tmpR = data
+                //   loginWithMSAD(tmpR2, tmpR);
+                delete tmpR, tmpR2
+                // tmpR == 
+                // tmpR2 ==
+                // document.getElementById("json").innerHTML = JSON.stringify(data, null, 2);
+                // loginWithMSAD(data);
+            }
+
+            function showWelcomeMessage() {
+                // var divWelcome = document.getElementById('WelcomeMessage');
+                // divWelcome.innerHTML = "Welcome " + myMSALObj.getAccount().userName + " to Microsoft Graph API";
+                // var loginbutton = document.getElementById('SignIn');
+                // loginbutton.innerHTML = 'Sign Out';
+                // loginbutton.setAttribute('onclick', 'signOut();');
+            }
+
+            //This function can be removed if you do not need to support IE
+            function acquireTokenRedirectAndCallMSGraph() {
+                //Always start with acquireTokenSilent to obtain a token in the signed in user from cache
+                myMSALObj.acquireTokenSilent(requestObj).then(function (tokenResponse) {
+                    callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken, graphAPICallback);
+                }).catch(function (error) {
+                    console.log(error);
+                    // Upon acquireTokenSilent failure (due to consent or interaction or login required ONLY)
+                    // Call acquireTokenRedirect
+                    if (requiresInteraction(error.errorCode)) {
+                        myMSALObj.acquireTokenRedirect(requestObj);
+                    }
+                });
+            }
+
+            //This function can be removed if you do not need to support IE
+            function silentCallMSGraph() {
+                //Always start with acquireTokenSilent to obtain a token in the signed in user from cache
+                myMSALObj.acquireTokenSilent(requestObj).then(function (tokenResponse) {
+                    callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken, graphAPICallback);
+                }).catch(function (error) {
+                    console.log(error);
+                    // Upon acquireTokenSilent failure (due to consent or interaction or login required ONLY)
+                    // Call acquireTokenRedirect
+                    // if (requiresInteraction(error.errorCode)) {
+                    //     myMSALObj.acquireTokenRedirect(requestObj);
+                    // }
+                });
+            }
+
+            function authRedirectCallBack(error, response) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    if (response.tokenType === "access_token") {
+                        callMSGraph(graphConfig.graphMeEndpoint, response.accessToken, graphAPICallback);
+                    } else {
+                        console.log("token type is:" + response.tokenType);
+                    }
+                }
+            }
+
+            function requiresInteraction(errorCode) {
+                if (!errorCode || !errorCode.length) {
+                    return false;
+                }
+                return errorCode === "consent_required" ||
+                    errorCode === "interaction_required" ||
+                    errorCode === "login_required";
+            }
+
+            // Browser check variables
+            var ua = window.navigator.userAgent;
+            var msie = ua.indexOf('MSIE ');
+            var msie11 = ua.indexOf('Trident/');
+            var msedge = ua.indexOf('Edge/');
+            var isIE = msie > 0 || msie11 > 0;
+            var isEdge = msedge > 0;
+
+            //If you support IE, our recommendation is that you sign-in using Redirect APIs
+            //If you as a developer are testing using Edge InPrivate mode, please add "isEdge" to the if check
+
+            // can change this to default an experience outside browser use
+            var loginType = isIE ? "REDIRECT" : "POPUP";
+
+            // runs on page load, change config to try different login types to see what is best for your application
+            if (loginType === 'POPUP') {
+                if (myMSALObj.getAccount()) {// avoid duplicate code execution on page load in case of iframe and popup window.
+                    showWelcomeMessage();
+                    acquireTokenPopupAndCallMSGraph();
+                }
+            }
+            else if (loginType === 'REDIRECT') {
+                document.getElementById("SignIn").onclick = function () {
+                    myMSALObj.loginRedirect(requestObj);
+                };
+
+                if (myMSALObj.getAccount() && !myMSALObj.isCallback(window.location.hash)) {// avoid duplicate code execution on page load in case of iframe and popup window.
+                    showWelcomeMessage();
+                    acquireTokenRedirectAndCallMSGraph();
+                }
+            } else {
+                console.error('Please set a valid login type');
+            }
+
+        </script>
+
+    </div>
+
+
+
+</body>
+
+</html>

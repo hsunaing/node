@@ -13,11 +13,9 @@
     <link rel="stylesheet" href="css/iosradio.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/util.css">
-    
 </head>
 
-<body>
-
+<body onload="init();">
     <div class="limiter">
         <div class="container-login100">
             <div class="wrap-login100">
@@ -26,16 +24,14 @@
                     <img src="images/img-01.png" alt="IMG">
                 </div>
 
-                <form id="loginform" class="login100-form validate-form" role="form">
+                <form id="" class="login100-form">
                     <span class="login100-form-title">
 
                         <img src="images/Yoma_Bank_Logo.svg.png" alt="Northern Lights" width="100" height="100">
 
                     </span>
                     <span class="login100-form-title">
-
                         Employee Portal
-
                     </span>
 
                     <div class="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
@@ -65,23 +61,23 @@
                         </div>
                         <div>Remember me</div> -->
                     </div>
-                    <div class="container-login100-form-btn controls">
-                        <button id="btn-login" href="#" class="login100-form-btn">
+
+                    <div class="container-login100-form-btn">
+                        <button type="button" id="1" onclick="return loginDebugNow()" class="login100-form-btn">
                             Login
                         </button>
                     </div>
                     <div class="container-login100-form-btn controls">
                         <span class="login100-form text-center">
-
                             Login with:
-
                         </span>
                     </div>
                     <div class="container-login100-form-btn controls">
-                        <!-- <button id="btn-login" href="#" onclick="testExec()" class="azure-btn">
-                            Login with Azure AD
+                        <!-- <button type="button" id="2" onclick="signOut()" class="azure-btn">
+                            Logout
                         </button> -->
-                        <a href="#" onclick="signIn()"><img src="images/azureAD_connect.png" height="50"></a>
+                        <a href="#" onclick="signIn(); signInClk();"><img src="images/azureAD_connectex.png" width="300"
+                                height="50px"></a>
 
                     </div>
                     <!-- <div class="text-center p-t-12">
@@ -112,15 +108,17 @@
 
 
     </div>
-    <!-- <script src="cordova.js"></script> -->
-    <script src="js/index.js"></script>
+    <script src="cordova.js"></script>
+
     <script src="js/jquery-1.11.1.min.js"></script>
     <script src="js/bootstrap.js"></script>
+    <script src="js/index.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/login.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.4/bluebird.min.js"></script>
     <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.0/js/msal.js"></script>
     <script>
+       
         var msalConfig = {
             auth: {
                 clientId: "f60b955e-ac33-42b3-ac74-de49a53f2888",
@@ -132,7 +130,7 @@
             }
         };
         var tmpR, tmpR2
-
+        var clkT
         var graphConfig = {
             graphMeEndpoint: "https://graph.microsoft.com/v1.0/me"
         };
@@ -148,23 +146,44 @@
         // Register Callbacks for redirect flow
         // myMSALObj.handleRedirectCallbacks(acquireTokenRedirectCallBack, acquireTokenErrorRedirectCallBack);
         myMSALObj.handleRedirectCallback(authRedirectCallBack);
-
+        function signInClk() {
+            clkT = true;
+        }
         function signIn() {
-            myMSALObj.loginPopup(requestObj).then(function (loginResponse) {
-                //Successful login
-                showWelcomeMessage();
-                //Call MS Graph using the token in the response
-                acquireTokenPopupAndCallMSGraph();
-            }).catch(function (error) {
-                //Please check the console for errors
-                console.log(error);
-            });
+            let tmp = localStorage.getItem("deviceOS");
+            if (tmp == 'droid') {
+
+                let loggedIN = localStorage.getItem("loggedIN");
+                if (loggedIN != '') {
+                    msLogin();
+                } else if (clkT) {
+                    msLogin();
+                }
+                
+            } else {
+                myMSALObj.loginPopup(requestObj).then(function (loginResponse) {
+                    //Successful login
+                    showWelcomeMessage();
+                    //Call MS Graph using the token in the response
+                    acquireTokenPopupAndCallMSGraph();
+                }).catch(function (error) {
+                    //Please check the console for errors
+                    console.log(error);
+                });
+            }
+
         }
 
-        function signOut() {
+        // function signOut() {
+        //     myMSALObj.logout();
+        // }
+        async function signOutIn() {
             myMSALObj.logout();
         }
-
+        function signOut() {
+            // signOutIn();
+            window.location.href = 'logout';
+        }
         function acquireTokenPopupAndCallMSGraph() {
             //Always start with acquireTokenSilent to obtain a token in the signed in user from cache
             myMSALObj.acquireTokenSilent(requestObj).then(function (tokenResponse) {
@@ -203,16 +222,16 @@
             delete tmpR, tmpR2
             // tmpR == 
             // tmpR2 ==
-            document.getElementById("json").innerHTML = JSON.stringify(data, null, 2);
+            // document.getElementById("json").innerHTML = JSON.stringify(data, null, 2);
             // loginWithMSAD(data);
         }
 
         function showWelcomeMessage() {
-            var divWelcome = document.getElementById('WelcomeMessage');
-            divWelcome.innerHTML = "Welcome " + myMSALObj.getAccount().userName + " to Microsoft Graph API";
-            var loginbutton = document.getElementById('SignIn');
-            loginbutton.innerHTML = 'Sign Out';
-            loginbutton.setAttribute('onclick', 'signOut();');
+            // var divWelcome = document.getElementById('WelcomeMessage');
+            // divWelcome.innerHTML = "Welcome " + myMSALObj.getAccount().userName + " to Microsoft Graph API";
+            // var loginbutton = document.getElementById('SignIn');
+            // loginbutton.innerHTML = 'Sign Out';
+            // loginbutton.setAttribute('onclick', 'signOut();');
         }
 
         //This function can be removed if you do not need to support IE
@@ -227,6 +246,21 @@
                 if (requiresInteraction(error.errorCode)) {
                     myMSALObj.acquireTokenRedirect(requestObj);
                 }
+            });
+        }
+
+        //This function can be removed if you do not need to support IE
+        function silentCallMSGraph() {
+            //Always start with acquireTokenSilent to obtain a token in the signed in user from cache
+            myMSALObj.acquireTokenSilent(requestObj).then(function (tokenResponse) {
+                callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken, graphAPICallback);
+            }).catch(function (error) {
+                console.log(error);
+                // Upon acquireTokenSilent failure (due to consent or interaction or login required ONLY)
+                // Call acquireTokenRedirect
+                // if (requiresInteraction(error.errorCode)) {
+                //     myMSALObj.acquireTokenRedirect(requestObj);
+                // }
             });
         }
 
@@ -284,6 +318,7 @@
         } else {
             console.error('Please set a valid login type');
         }
+
     </script>
 </body>
 

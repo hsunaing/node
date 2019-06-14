@@ -4,7 +4,7 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 var app = express();
 var mysql = require('mysql');
-// var cors = require('cors');
+var cors = require('cors');
 var path = require('path');
 // var morgan  = require('morgan');
 // Application initialization
@@ -23,20 +23,17 @@ var graphConfig = {
     graphMeEndpoint: "https://graph.microsoft.com/v1.0/me"
 };
 
+
 var sess;
 var globEmailIdvar,managerIndicator;
-
-
+var titleBoo;
 app.set('views', __dirname + '/views');
 app.use('/js',express.static(path.join(__dirname, '/views/js')));
 app.use('/css',express.static(path.join(__dirname, '/views/css')));
 app.use('/fonts',express.static(path.join(__dirname, '/views/fonts')));
 app.use('/vendor',express.static(path.join(__dirname, '/views/vendor')));
 app.use('/images',express.static(path.join(__dirname, '/views/images')));
-
 app.engine('html', require('ejs').renderFile);
-//app.use(morgan('combined'))
-
 
 app.use(session({
     secret: 'ssshhhhh',
@@ -46,7 +43,7 @@ app.use(session({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(cors());
+app.use(cors());
 
 app.get('/',function(req,res){
     
@@ -80,7 +77,7 @@ app.get('/manager',function(req,res){
 
 
     if(sess.email && sess.managr == 'Y'){
-        res.render('manage.html');
+        res.render('manager.html');
     }
     else{
         console.log("not logged in. Redirect to login page from /manager route");
@@ -282,7 +279,7 @@ app.get('/leaveApply',function(req,res){
     sess=req.session;
     console.log(sess.empId, sess.managr, managerIndicator +" for this manager");
     if(sess.email && sess.managr != 'Y'){
-        res.render('home3.html');
+        res.render('leaveApply.html');
     }
     else{
         console.log("not logged in. Redirect to login page from /leavApply route");
@@ -437,7 +434,11 @@ app.get('/logout',function(req,res){
     }
     else{
         console.log("logged out "+sess.email,sess.managr,managerIndicator);
-        res.redirect('/');
+        res.send({
+            result: '/logoutOK',
+            msg:'success'
+        });
+        //res.redirect('/');
     }
     });
 
@@ -451,7 +452,7 @@ app.post('/login',function(req,res){
 
     globEmailIdvar = req.body.email;
     var pswd = req.body.password;
-    console.log(req.body.email,req.body.password);
+    //console.log(req.body.email,req.body.password);
 
     //query and check whether he is an Manager
     connection.query('USE hsunaing_mysqldb', function (err) {
@@ -481,6 +482,7 @@ app.post('/login',function(req,res){
 
                         if(req.body.password == empPassword){
                             sess.email=req.body.email;//In this we are assigning session
+
                             sess.empId=EmpID;
                             sess.managr=empMngrIndc;
                             managerIndicator = empMngrIndc;
@@ -494,7 +496,7 @@ app.post('/login',function(req,res){
                             }
                             else if(empMngrIndc == 'N'){
                                 res.send({
-                                    result: '/leavApply',
+                                    result: '/leaveApply',
                                     msg:'success'
                                 });
                             }
@@ -522,7 +524,7 @@ app.post('/login',function(req,res){
 app.post('/adlogin',function(req,res){
     sess=req.session
     var EmpID,empName,empEmail,empPassword,empMngrIndc,empMngrId;
-    console.log('req section: ', req.session )
+    console.log('req section adlogin: ', req.session )
     //+' auth: '+ req.body.authorization
     // console.log('starting:: ',req.headers.msqobj)
     //globEmailIdvar = req.body.email;
@@ -535,6 +537,8 @@ app.post('/adlogin',function(req,res){
     console.log(req.body.msqObj.id)
     console.log('oneObj printing:')
                         EmpID = oneObj.id;
+                        empEmail = oneObj.mail;
+                        empName = oneObj.displayName;
                         console.log('id is: ' + EmpID);
                         console.log('auth is: ' + req.body.authorization);
 
@@ -554,7 +558,7 @@ app.post('/adlogin',function(req,res){
                                 
                                 if (data.mail == empEmail) {
                                     console.log('ready to query!!!')
-                                    //queryInternal();
+                                    queryInternal();
                                 }
                                 
                                 var titleStr = data.jobTitle
@@ -565,7 +569,7 @@ app.post('/adlogin',function(req,res){
                                 var titleStr = titleStr.split(',');
                                 var titleDpt = titleStr[1];
                                 var titleStr = titleStr[0];
-                                var titleBoo;
+                               
                                 var titleBoo1 = titleStr.includes('Head')
                                 console.log('Boo1: ', titleBoo1)
                                 var titleBoo2 = titleStr.includes('Lead')
@@ -578,7 +582,11 @@ app.post('/adlogin',function(req,res){
                                 if ((titleBoo1 || titleBoo2 || titleBoo4) && !titleBoo3){
                                     sess.managr='Y';
                                     titleBoo = true
-                                } else {
+                                } else if (EmpID == '3825005c-98ff-40ea-a009-5da520729b5f') {
+                                    sess.managr='Y';
+                                    titleBoo = true
+                                } 
+                                else {
                                     sess.managr='N'
                                     titleBoo = false
                                 }
@@ -587,35 +595,35 @@ app.post('/adlogin',function(req,res){
                                                 sess.email=data.mail;//In this we are assigning session
                                                 sess.empId=data.id;    
                                                 managerIndicator = sess.managr;
-                    
+                                                sess.data = data;
                                                 //console.log("emp id is saved "+EmpID + "mngr indicator "+sess.managr + " Glob var mngr indictr "+managerIndicator);
                     
                     
                     
                         if (titleBoo) {
                             console.log('manager', titleBoo)
-                            res.send({
-                                result: data,
-                                tourl: '/manager',
-                                msg:'Success'
-                            });
+                            // res.send({
+                            //     result: data,
+                            //     tourl: '/manager',
+                            //     msg:'Success'
+                            // });
                         } else {
                             console.log('leaveApply', titleBoo)
-                            res.send({
-                                result: data,
-                                tourl: '/leaveApply',
-                                msg:'Success'
-                            });
+                            // res.send({
+                            //     result: data,
+                            //     tourl: '/leaveApply',
+                            //     msg:'Success'
+                            // });
                         }
                     
                     
                         })
                         .catch(function (error) {
                           console.log('Error ' + error.message)
-                          res.send({
-                            result: 'Failed ms method! ' + error.message,
-                            msg:'Failed'
-                        });
+                        //   res.send({
+                        //     result: 'Failed ms method! ' + error.message,
+                        //     msg:'Failed'
+                        // });
                         })
 
                          //connectToMS();
@@ -650,13 +658,17 @@ function queryInternal() {
                                 empMngrIndc = row.Mngr_Indc;
                                 empMngrId = row.Mngr_emp_id;
         
-                                if(req.body.password == empPassword){
+                                if(sess.data.id == empPassword){
                                     sess.email=req.body.email;//In this we are assigning session
+                                    if (sess.email == null) {
+                                        sess.email = empEmail;
+                                    }
                                     sess.empId=EmpID;
                                     sess.managr=empMngrIndc;
                                     managerIndicator = empMngrIndc;
                                     console.log("emp id is saved "+EmpID + "mngr indicator "+sess.managr + " Glob var mngr indictr "+managerIndicator);
                                     //check who logged in
+                                    oldUser();
                                     if(empMngrIndc == 'Y'){
                                         // res.send({
                                         //     result: '/manager',
@@ -680,7 +692,7 @@ function queryInternal() {
                             }
                         }
                         else{
-
+                            newUser();
 
                             //res.statusCode = 401;
                             // res.send({
@@ -771,31 +783,68 @@ function connectToMS() {
     })
 }
 function newUser() {
+                        // EmpID = oneObj.id;
+                        // empEmail = oneObj.mail;
+                        // empName = oneObj.displayName;
     connection.query('USE hsunaing_mysqldb', function (err) {
         if (err) throw err;
-    connection.query('insert into leav_requests (Emp_ID,from_date,to_date,reason,no_of_days,status) value("'+sess.empId+'","'+from_dt+'","'+to_dt+'","'+reason+'","'+no_of_days+'","Pending")',
+    connection.query('insert into employee (Emp_ID,Name,Email,Password,Mngr_Indc,Mngr_emp_id) value("'+sess.empId+'","'+empName+'","'+empEmail+'","'+EmpID+'","'+managerIndicator+'","5")',
         function(error, results) {
           if(error) {
             console.log("Leave Application error: " + error.message);
             res.statusCode = 500;
             res.send({
-                result: 'Error in Applying leave',
+                result: 'new user error',
                 err: errror.code,
                 msg: 'fail'
             });
           }
           else{
-            console.log('Inserted: ' + results.affectedRows + ' row. and Id inserted: ' + results.insertId);
-            res.send({
-                result: 'leave Requested successfully with id '+results.insertId,
-                json: results,
-                msg:'success',
-            });
+            console.log('Inserted: ');
+            if (titleBoo) {
+                console.log('manager', titleBoo)
+                res.send({
+                    result: sess.data,
+                    json: results,
+                    tourl: '/manager',
+                    msg:'Success'
+                });
+            } else {
+                console.log('leaveApply', titleBoo)
+                res.send({
+                    result: sess.data,
+                    json: results,
+                    tourl: '/leaveApply',
+                    msg:'Success'
+                });
+            }
+            // res.send({
+            //     result: 'new user created successfully with id ',
+            //     json: results,
+            //     msg:'success',
+            // });
           }
         });
     });
 }
+function oldUser() {
+    if (titleBoo) {
+        console.log('manager', titleBoo)
+        res.send({
+        result: sess.data,
+        tourl: '/manager',
+        msg:'Success'
+        });
+        } else {
+        console.log('leaveApply', titleBoo)
+        res.send({
+        result: sess.data,
+        tourl: '/leaveApply',
+        msg:'Success'
+        });
+        }
 
+}
     
       
     // var resultN = axios.get(graphConfig.graphMeEndpoint, {
@@ -884,12 +933,6 @@ function newUser() {
 //     });
 //     })
 // }
-
-// app.listen(3000,function(){
-
-//     console.log("App Started on PORT 3000 open http://localhost:3000/ in browser");
-
-// });
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
 console.log('hi there ' + hellostring);
