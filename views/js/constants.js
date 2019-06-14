@@ -5,8 +5,8 @@
 // const VEGETABLE = "carrot";
 //const serverURLdata = 'http://10.2.12.45:3000'
 
-// const serverURLdata = 'http://leave-nodejs-echo.apps.us-east-2.online-starter.openshift.com'
-const serverURLdata = 'http://localhost:3000';
+const serverURLdata = 'http://leave-nodejs-echo.apps.us-east-2.online-starter.openshift.com'
+// const serverURLdata = 'http://localhost:3000';
 var currentPage =  window.location.href;
 console.log('currentPage: '+currentPage);
 function msLogin() {
