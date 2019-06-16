@@ -93,7 +93,9 @@ app.get('/leav/Applications',function(req,res){
     if(sess.email && sess.managr == 'Y'){
         connection.query('USE hsunaing_mysqldb', function (err) {
             if (err) throw err;
-            connection.query('SELECT * FROM leav_requests as A JOIN employee as B on A.Emp_ID=B.Emp_ID WHERE Mngr_emp_id="'+sess.empId+'"',
+            //'SELECT * FROM leav_requests as A JOIN employee as B on A.Emp_ID=B.Emp_ID WHERE Mngr_emp_id="'+sess.empId+'"'
+            //'SELECT * FROM leav_requests where status="Pending"'
+            connection.query('SELECT * FROM leav_requests as A JOIN employee as B on A.Emp_ID=B.Emp_ID WHERE status="Pending"',
                 function(err, rows, fields) {
                     if (err) {
                         console.error(err);
@@ -432,8 +434,11 @@ app.get('/logout',function(req,res){
     if(err){
         console.log(err);
     }
-    else{
-        console.log("logged out "+sess.email,sess.managr,managerIndicator);
+    else{ 
+        if (sess != null) {
+            console.log("logged out "+sess.email,sess.managr,managerIndicator);
+        }
+
         res.send({
             result: '/logoutOK',
             msg:'success'
@@ -540,13 +545,14 @@ app.post('/adlogin',function(req,res){
 
 
 
-
+    
     var oneObj = req.body.msqObj;
     console.log(req.body.msqObj.id)
     console.log('oneObj printing:')
                         EmpID = oneObj.id;
                         empEmail = oneObj.mail;
                         empName = oneObj.displayName;
+                        globEmailIdvar = oneObj.mail;
                         console.log('id is: ' + EmpID);
                         console.log('auth is: ' + req.body.authorization);
 
@@ -678,21 +684,33 @@ function queryInternal() {
                                     sess.empId=EmpID;
                                     sess.managr=empMngrIndc;
                                     managerIndicator = empMngrIndc;
+                                    
                                     console.log("emp id is saved "+EmpID + "mngr indicator "+sess.managr + " Glob var mngr indictr "+managerIndicator);
                                     //check who logged in
-                                    oldUser();
+                                 
                                     if(empMngrIndc == 'Y'){
+                                        // sess.managr='Y';
+                                        titleBoo = true
                                         // res.send({
                                         //     result: '/manager',
                                         //     msg:'success'
                                         // });
                                     }
                                     else if(empMngrIndc == 'N'){
+                                        // sess.managr='N';
+                                        titleBoo = false
                                         // res.send({
                                         //     result: '/leavApply',
                                         //     msg:'success'
                                         // });
                                     }
+                                    if (empEmail == sess.data.mail) {
+                                        oldUser();
+                                    }
+                                    else {
+                                        newUser();
+                                    }
+                                   
                                 }
                                 else{
                                     // res.statusCode = 401;
@@ -704,7 +722,7 @@ function queryInternal() {
                             }
                         }
                         else{
-                            newUser();
+                        newUser(); 
 
                             //res.statusCode = 401;
                             // res.send({
@@ -807,7 +825,7 @@ function newUser() {
             res.statusCode = 500;
             res.send({
                 result: 'new user error',
-                err: errror.code,
+                err: error.code,
                 msg: 'fail'
             });
           }
@@ -843,9 +861,9 @@ function oldUser() {
     if (titleBoo) {
         console.log('manager', titleBoo)
         res.send({
-        result: sess.data,
-        tourl: '/manager',
-        msg:'Success'
+            result: '/manager',
+            tourl: '/manager',
+            msg:'success'
         });
         } else {
         console.log('leaveApply', titleBoo)
