@@ -14,8 +14,8 @@ var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
     mongoURLLabel = "", hellostring = process.env.SOMEFAX;
 var connection = mysql.createConnection({
-        host     : 'hsunaing.heliohost.org',
-        user     : 'hsunaing',
+        host     : process.env.DBSER,
+        user     : process.env.DBUS,
         password : process.env.DBPW
     });
     
@@ -456,7 +456,15 @@ app.post('/login',function(req,res){
 
     //query and check whether he is an Manager
     connection.query('USE hsunaing_mysqldb', function (err) {
-        if (err) throw err;
+        if (err) {
+            console.error(err);
+            res.statusCode = 500;
+            res.send({
+                result: 'error',
+                err:    err.code,
+                msg: 'fail'
+            });
+        };
         connection.query('SELECT * FROM employee WHERE Email = "'+req.body.email+'"',
             function(err, rows, fields) {
                 if (err) {
@@ -583,8 +591,8 @@ app.post('/adlogin',function(req,res){
                                     sess.managr='Y';
                                     titleBoo = true
                                 } else if (EmpID == '3825005c-98ff-40ea-a009-5da520729b5f') {
-                                    sess.managr='Y';
-                                    titleBoo = true
+                                    sess.managr='N';
+                                    titleBoo = false
                                 } 
                                 else {
                                     sess.managr='N'
@@ -634,11 +642,15 @@ app.post('/adlogin',function(req,res){
 function queryInternal() {
             //query and check whether he is an Manager
             connection.query('USE hsunaing_mysqldb', function (err) {
-                if (err) throw err;
+                if (err) {
+                    console.error(err);
+                            errorEx(err);
+                };
                 connection.query('SELECT * FROM employee WHERE Email = "'+empEmail+'"',
                     function(err, rows, fields) {
                         if (err) {
                             console.error(err);
+                            errorEx(err);
                             // res.statusCode = 500;
                             // res.send({
                             //     result: 'error',
@@ -843,6 +855,9 @@ function oldUser() {
         msg:'Success'
         });
         }
+
+}
+function errorEx() {
 
 }
     
